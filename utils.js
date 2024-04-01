@@ -1,4 +1,5 @@
 import { exec } from 'child_process';
+import ip from 'ip';
 
 export function arraysEqual (arr1, arr2) {
   return arr1.length === arr2.length && arr1.every((value, index) => value === arr2[index]);
@@ -22,3 +23,11 @@ export function pingIP(ip) {
   });
 }
 
+const macAddress =  /^([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])$/;
+export function isMacAddress(str) {
+  return macAddress.test(str);
+}
+
+export function isIp (str) {
+  return ip.isV4Format(str) || (!isMacAddress(str) && ip.isV6Format(str))
+}

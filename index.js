@@ -1,15 +1,15 @@
 import dotenv from 'dotenv';
 import { neigh } from 'ip-wrapper';
-import { pingIP, arraysEqual } from './utils.js';
+import { pingIP, arraysEqual, isMacAddress, isIp } from './utils.js';
 
 dotenv.config();
 
 const staleIPs = {}; // Object to track stale IPs with TTL
 
 const adguardConfig = {
-  api: process.env.API || 'http://127.0.0.1:3000',
-  username: process.env.USERNAME || 'admin',
-  password: process.env.PASSWORD || 'password'
+  api: process.env.ADGUARD_API || 'http://127.0.0.1:3000',
+  username:  process.env.ADGUARD_USERNAME || 'admin',
+  password: process.env.ADGUARD_PASSWORD || 'password'
 };
 
 const API_ENDPOINTS = {
@@ -57,12 +57,13 @@ async function updateClients() {
     }, {});
 
     const clientUpdates = existingClients.clients.map(async (client) => {
-      const macAddresses = client.ids.filter(id => id.includes(':') && id.length === 17);
-      let ipsForClient = client.ids.filter(id => !id.includes(':') || id.length !== 17);
+      const macAddresses = client.ids.filter(id => isMacAddress(id));
+      const originalClientIps = client.ids.filter(id => isIp(id));
+      let ipsForClient = [...originalClientIps];
 
       macAddresses.forEach(mac => {
         if (neighborIPsByMAC[mac]) {
-          ipsForClient = [...ipsForClient, ...neighborIPsByMAC[mac]];
+          ipsForClient = neighborIPsByMAC[mac];
         }
       });
 
@@ -79,10 +80,10 @@ async function updateClients() {
         return isAlive || (staleIPs[ip] <= 100);
       });
 
-      const updatedIds = [...new Set([...macAddresses, ...ipsForClient])];
+      const updatedIds = [...new Set([...ipsForClient])];
 
-      if (!arraysEqual(client.ids, updatedIds)) {
-        client.ids = updatedIds;
+      if (!arraysEqual(originalClientIps, updatedIds)) {
+        client.ids = updatedIds.concat(client.ids.filter(id => !isIp(id)));
         const updateObj = {
           name: client.name,
           data: client
