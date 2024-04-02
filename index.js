@@ -84,7 +84,7 @@ async function updateClients() {
 
       console.log(`Client ${client.name} has IPs: ${originalClientIps} and updated IPs: ${updatedIds}`)
       if (!arraysEqual(originalClientIps, updatedIds)) {
-        client.ids = updatedIds.concat(client.ids.filter(id => !isIp(id)));
+        client.ids = [...updatedIds, ...new Set([...client.ids.filter(id => !isIp(id))])];
         const updateObj = {
           name: client.name,
           data: client
