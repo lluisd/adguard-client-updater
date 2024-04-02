@@ -91,6 +91,7 @@ async function updateClients() {
           data: client
         };
 
+        console.log(`Updating client ${client.name} with new IDs: ${updatedIds}`);
         return adguardFetch(API_ENDPOINTS.CLIENTS_UPDATE, 'POST', updateObj);
       }
     });
