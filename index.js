@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import { neigh } from 'ip-wrapper';
-import { pingIP, arraysEqual, isMacAddress, isIp } from './utils.js';
+import { arraysEqual, isMacAddress, isIp } from './utils.js';
 
 dotenv.config();
 
@@ -61,25 +61,12 @@ async function updateClients() {
       if (macAddresses.length === 0) return
 
       const originalClientIps = client.ids.filter(id => isIp(id));
-      let ipsForClient = [...originalClientIps];
+      let ipsForClient = [];
 
       macAddresses.forEach(mac => {
         if (neighborIPsByMAC[mac]) {
-          ipsForClient = neighborIPsByMAC[mac];
+          ipsForClient = [...ipsForClient, ...neighborIPsByMAC[mac]];
         }
-      });
-
-      const pingResults = await Promise.all(ipsForClient.map(ip => pingIP(ip)));
-      ipsForClient = ipsForClient.filter((ip, index) => {
-        const isAlive = pingResults[index];
-        if (isAlive) {
-          if (staleIPs[ip]) {
-            delete staleIPs[ip];
-          }
-        } else {
-          staleIPs[ip] = (staleIPs[ip] || 0) + 1;
-        }
-        return isAlive || (staleIPs[ip] <= 100);
       });
 
       const updatedIds = [...new Set([...ipsForClient])];
