@@ -58,6 +58,8 @@ async function updateClients() {
 
     const clientUpdates = existingClients.clients.map(async (client) => {
       const macAddresses = client.ids.filter(id => isMacAddress(id));
+      if (macAddresses.length === 0) return
+
       const originalClientIps = client.ids.filter(id => isIp(id));
       let ipsForClient = [...originalClientIps];
 
@@ -67,7 +69,7 @@ async function updateClients() {
         }
       });
 
-      const pingResults = await Promise.allSettled(ipsForClient.map(ip => pingIP(ip)));
+      const pingResults = await Promise.all(ipsForClient.map(ip => pingIP(ip)));
       ipsForClient = ipsForClient.filter((ip, index) => {
         const isAlive = pingResults[index];
         if (isAlive) {
@@ -95,7 +97,12 @@ async function updateClients() {
       }
     });
 
-    await Promise.allSettled(clientUpdates);
+    const results = await Promise.allSettled(clientUpdates);
+    results.forEach(result => {
+      if (result.status === 'rejected') {
+        console.error('Error updating client', result.reason);
+      }
+    });
   } catch (error) {
     console.error('Unable to update AdGuard clients', error.message);
   }
