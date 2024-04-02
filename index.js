@@ -84,7 +84,6 @@ async function updateClients() {
 
       const updatedIds = [...new Set([...ipsForClient])];
 
-      console.log(`Client ${client.name} has IPs: ${originalClientIps} and updated IPs: ${updatedIds}`)
       if (!arraysEqual(originalClientIps, updatedIds)) {
         client.ids = [...updatedIds, ...new Set([...client.ids.filter(id => !isIp(id))])];
         const updateObj = {
@@ -92,7 +91,6 @@ async function updateClients() {
           data: client
         };
 
-        console.log(`Updating client ${client.name} with new IDs: ${updatedIds}`);
         return adguardFetch(API_ENDPOINTS.CLIENTS_UPDATE, 'POST', updateObj);
       }
     });
