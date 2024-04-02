@@ -58,7 +58,6 @@ async function updateClients() {
 
     const clientUpdates = existingClients.clients.map(async (client) => {
       const macAddresses = client.ids.filter(id => isMacAddress(id));
-      console.log(`Checking client ${client.name} with macs: ${macAddresses}`)
       if (macAddresses.length === 0) return
 
       const originalClientIps = client.ids.filter(id => isIp(id));
@@ -85,9 +84,8 @@ async function updateClients() {
 
       const updatedIds = [...new Set([...ipsForClient])];
 
-      console.log(`Client ${client.name} has IPs: ${updatedIds} and original IPs: ${originalClientIps} with macs: ${macAddresses}`)
       if (!arraysEqual(originalClientIps, updatedIds)) {
-        client.ids = [...updatedIds, ...new Set([...client.ids.filter(id => !isIp(id))])];
+        client.ids = [...new Set([...client.ids.filter(id => !isIp(id))]), ...updatedIds];
         const updateObj = {
           name: client.name,
           data: client
